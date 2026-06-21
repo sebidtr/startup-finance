@@ -1,0 +1,104 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with gamified app metrics (XP, streak, daily quests, etc.)",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "xp": {
+          "type": "number"
+        },
+        "streak": {
+          "type": "number"
+        },
+        "completedNodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lastLoginDate": {
+          "type": "string"
+        },
+        "unlockedItems": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dailyQuests": {
+          "type": "object",
+          "properties": {
+            "chatAsked": {
+              "type": "boolean"
+            },
+            "nodeCompleted": {
+              "type": "boolean"
+            },
+            "articleRead": {
+              "type": "boolean"
+            },
+            "scenarioAnswered": {
+              "type": "boolean"
+            },
+            "selectedScenarioOption": {
+              "type": "integer"
+            },
+            "budgetCreated": {
+              "type": "boolean"
+            },
+            "shopVisited": {
+              "type": "boolean"
+            },
+            "lastResetDate": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "required": ["name", "xp", "streak", "completedNodes"]
+    },
+    "FormSubmission": {
+      "title": "FormSubmission",
+      "description": "Dynamic contact and partnership submissions (StartUp in schools, user support)",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "age": {
+          "type": "string"
+        },
+        "clasa": {
+          "type": "string"
+        },
+        "institutie": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      },
+      "required": ["email", "type", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles database"
+    },
+    "/form_submissions/{submissionId}": {
+      "schema": "FormSubmission",
+      "description": "Form submissions database"
+    }
+  }
+}

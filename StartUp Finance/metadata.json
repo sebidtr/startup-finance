@@ -1,0 +1,6 @@
+{
+  "name": "StartupFinance",
+  "description": "Platformă interactivă de educație financiară și antreprenoriat pentru tinerii din România.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

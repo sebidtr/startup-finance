@@ -1,0 +1,609 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+body {
+  background-color: #050811;
+  color: #F8FAFC;
+  font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  background-image: 
+    linear-gradient(rgba(16, 185, 129, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 185, 129, 0.02) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Light Mode Overrides */
+body.light-mode {
+  background-color: #F8FAFC;
+  color: #0F172A;
+  background-image: 
+    linear-gradient(rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.light-mode .sticky {
+  background-color: rgba(248, 250, 252, 0.9) !important;
+  border-color: #E2E8F0 !important;
+}
+
+.light-mode nav {
+  border-bottom-color: #E2E8F0 !important;
+}
+
+.light-mode .bg-\[\#050811\] {
+  background-color: #F8FAFC !important;
+}
+
+.light-mode .bg-\[\#0F1322\] {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05) !important;
+}
+
+.light-mode .bg-\[\#1E2538\] {
+  background-color: #F1F5F9 !important;
+  border-color: #E2E8F0 !important;
+}
+
+.light-mode .border-\[\#1F293D\] {
+  border-color: #E2E8F0 !important;
+}
+
+.light-mode .border-\[\#1F293D\]\/60 {
+  border-color: rgba(226, 232, 240, 0.6) !important;
+}
+
+.light-mode .border-\[\#1F293D\]\/70 {
+  border-color: rgba(226, 232, 240, 0.7) !important;
+}
+
+.light-mode .border-\[\#1F293D\]\/75 {
+  border-color: rgba(226, 232, 240, 0.75) !important;
+}
+
+.light-mode .bg-\[\#1F293D\] {
+  background-color: #E2E8F0 !important;
+}
+
+.light-mode .text-white {
+  color: #0F172A !important;
+}
+
+/* Keep text white on solid colored badges, circular indicators, and third-party buttons in light mode */
+.light-mode .bg-emerald-500.text-white, .light-mode .bg-emerald-500 .text-white,
+.light-mode .bg-indigo-500.text-white, .light-mode .bg-indigo-500 .text-white,
+.light-mode .bg-red-500.text-white, .light-mode .bg-red-500 .text-white,
+.light-mode .bg-rose-500.text-white, .light-mode .bg-rose-500 .text-white,
+.light-mode .bg-blue-600.text-white, .light-mode .bg-blue-600 .text-white,
+.light-mode .bg-\[\#1A73E8\].text-white, .light-mode .bg-\[\#1A73E8\] .text-white,
+.light-mode .bg-\[\#1A73E8\] span,
+.light-mode .bg-amber-500.text-white, .light-mode .bg-amber-500 .text-white {
+  color: #FFFFFF !important;
+}
+
+/* Ensure hovered texts that traditionally turn white turn dark slate in light mode */
+.light-mode .hover\:text-white:hover {
+  color: #0F172A !important;
+}
+
+.light-mode .hover\:text-\[\#F8FAFC\]:hover {
+  color: #0F172A !important;
+}
+
+.light-mode .hover\:bg-\[\#1E2538\]:hover {
+  background-color: #E2E8F0 !important;
+}
+
+.light-mode .hover\:bg-\[\#1E2538\]\/30:hover {
+  background-color: rgba(15, 23, 42, 0.05) !important;
+}
+
+.light-mode .bg-white\/5 {
+  background-color: rgba(15, 23, 42, 0.04) !important;
+}
+
+.light-mode .bg-white\/10 {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+.light-mode .bg-white\/20 {
+  background-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+.light-mode .text-gray-200 {
+  color: #1E293B !important;
+}
+
+.light-mode .text-gray-300 {
+  color: #334155 !important;
+}
+
+.light-mode .text-gray-400 {
+  color: #475569 !important;
+}
+
+/* Light mode overrides for responsive text styling and standard slate utilities */
+.light-mode .text-slate-100 {
+  color: #0F172A !important;
+}
+
+.light-mode .text-slate-200 {
+  color: #1E293B !important;
+}
+
+.light-mode .text-slate-300 {
+  color: #334155 !important;
+}
+
+.light-mode .text-slate-400 {
+  color: #475569 !important;
+}
+
+.light-mode .text-\[#F8FAFC\] {
+  color: #0F172A !important;
+}
+
+.light-mode .text-\[#64748B\] {
+  color: #64748B !important;
+}
+
+/* Maintain dark text color for active headings inside light-mode cards */
+.light-mode h1, 
+.light-mode h2, 
+.light-mode h3, 
+.light-mode h4 {
+  color: #0F172A !important;
+}
+
+/* Except when inside special banners like gradient text or brand */
+.light-mode .text-transparent {
+  color: transparent !important;
+}
+
+.light-mode .text-\[\#10B981\] {
+  color: #10B981 !important;
+}
+
+.light-mode .text-emerald-400 {
+  color: #059669 !important;
+}
+
+/* Duolingo path visual correction in light mode */
+.light-mode .bg-\[\#050811\]\/30 {
+  background-color: rgba(248, 250, 252, 0.55) !important;
+  border-color: #E2E8F0 !important;
+}
+
+.light-mode .border-\[\#10B981\]\/35 {
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+.light-mode .bg-\[\#10B981\]\/5 {
+  background-color: rgba(16, 185, 129, 0.05) !important;
+}
+
+.light-mode .bg-card {
+  background-color: #FFFFFF !important;
+}
+
+.light-mode .border-dashed {
+  border-color: #CBD5E1 !important;
+}
+
+.light-mode input, .light-mode select, .light-mode textarea {
+  background-color: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+  color: #0F172A !important;
+}
+
+.light-mode .bg-\[\#050811\]\/95 {
+  background-color: rgba(248, 250, 252, 0.95) !important;
+}
+
+.light-mode .text-white\/90 {
+  color: #1E293B !important;
+}
+
+/* Ensure action buttons with brand text maintain readable contrast */
+.light-mode button.bg-\[\#10B981\] {
+  background-color: #10B981 !important;
+  color: #0F172A !important;
+}
+
+.light-mode button.text-\[\#050811\] {
+  color: #0F172A !important;
+}
+
+.light-mode .bg-\[\#10B981\]\/10 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+}
+
+.light-mode .text-emerald-300 {
+  color: #059669 !important;
+}
+
+.light-mode .text-rose-300 {
+  color: #E11D48 !important;
+}
+
+/* --- TARGETED SELECTORS (1-6) & SELECTED CONTRASTY BUTTONS --- */
+
+/* Selector 1: 'Cont Nou' Hero button in light-mode */
+.light-mode div#root > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(2) {
+  background-color: #0F172A !important;
+  color: #FFFFFF !important;
+  border-color: #0F172A !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15) !important;
+}
+
+.light-mode div#root > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(2):hover {
+  background-color: #1E293B !important;
+  border-color: #1E293B !important;
+}
+
+/* Selector 2: strong element inside circuit list item 1 */
+.light-mode div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > strong:nth-of-type(1) {
+  color: #047857 !important;
+  font-weight: 800 !important;
+}
+
+/* Selector 3: strong element inside circuit list item 2 */
+.light-mode div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > strong:nth-of-type(1) {
+  color: #047857 !important;
+  font-weight: 800 !important;
+}
+
+/* Selector 4: the circuit list wrapper container */
+.light-mode div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) {
+  background-color: rgba(4, 120, 87, 0.04) !important;
+  border: 1px dashed rgba(4, 120, 87, 0.3) !important;
+  padding: 1.25rem !important;
+  border-radius: 1rem !important;
+}
+
+/* Selector 5: circuit list item 1 description wrapper */
+.light-mode div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) {
+  color: #1E293B !important;
+  font-size: 0.875rem !important;
+}
+
+/* Selector 6: circuit list item 2 description wrapper */
+.light-mode div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) {
+  color: #1E293B !important;
+  font-size: 0.875rem !important;
+}
+
+/* HIGH-CONTRAST LIGHT MODE SELECTED BUTTONS OVERRIDES */
+/* Ensure navigation menu active items have energetic green in light mode */
+.light-mode button[class*="bg-[#10B981]"] {
+  background-color: #10B981 !important; /* gorgeous green */
+  color: #FFFFFF !important; /* pristine text contrast */
+  font-weight: 800 !important;
+  border-color: #10B981 !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
+}
+
+/* Active buttons styling in light mode */
+.light-mode .active-page-tab {
+  background-color: #10B981 !important;
+  color: #FFFFFF !important;
+}
+
+/* Selected option responses in multiple-choice quiz during calibrations */
+.light-mode .border-slate-300 {
+  border-color: #10B981 !important;
+  background-color: rgba(16, 185, 129, 0.05) !important;
+}
+
+/* Option circles selected in light mode */
+.light-mode .bg-white.text-\[\#050811\] {
+  background-color: #10B981 !important;
+  color: #FFFFFF !important;
+  border-color: #10B981 !important;
+}
+
+/* Correct answers highlight in light mode */
+.light-mode .border-\[\#10B981\].bg-\[\#10B981\]\/10 {
+  border-color: #10B981 !important;
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+/* Ensure selected category pills on the articles page look highly contrasted green in light mode */
+.light-mode .bg-\[\#10B981\] {
+  background-color: #10B981 !important;
+  color: #FFFFFF !important;
+}
+
+/* Make Selector 1 ('Începe să înveți' Hero button) beautiful green in light-mode with a little green glow */
+.light-mode div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1) {
+  background-color: #10B981 !important;
+  color: #FFFFFF !important;
+  border-color: #10B981 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.5) !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* User targeted Button 'Începe să înveți' styling (Selector 3) - Dark Mode with a little green glow */
+div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1) {
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.5) !important;
+}
+
+.light-mode div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1):hover {
+  background-color: #059669 !important;
+  border-color: #059669 !important;
+}
+
+/* Make Selector 2 ('SF' brand logo container) beautiful green in light-mode */
+.light-mode div#root:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) {
+  background-color: #10B981 !important;
+  color: #050811 !important;
+  font-weight: 950 !important;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.25) !important;
+}
+
+/* User targeted Navbar Logo Image styling - Dark mode */
+div#root:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > img:nth-of-type(1) {
+  background-color: transparent !important;
+  outline: none !important;
+  border: none !important;
+  mix-blend-mode: normal !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* User targeted Navbar Logo Image styling - Light mode */
+.light-mode div#root:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > img:nth-of-type(1) {
+  background-color: transparent !important;
+  outline: none !important;
+  border: none !important;
+  mix-blend-mode: normal !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Make logo outline shape square with rounded corners on mobile screens */
+@media (max-width: 767px) {
+  div#root:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > img:nth-of-type(1) {
+    border-radius: 8px !important;
+  }
+}
+
+/* Make targeted indicator dot beautiful green in both themes */
+div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(1) {
+  background-color: #10B981 !important;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* User targeted Travis Floating Button styling - Dark and Light mode */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > button:nth-of-type(1) {
+  background-color: #10B981 !important;
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.45) !important;
+  outline: none !important;
+}
+
+/* User targeted Travis Floating Button SVG Icon - Dark mode (dark/charcoal chat bubble) */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > button:nth-of-type(1) > svg:nth-of-type(1) {
+  color: #050811 !important;
+  fill: #050811 !important;
+}
+
+/* User targeted Travis Floating Button SVG Icon - Light mode (light/white chat bubble) */
+.light-mode div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > button:nth-of-type(1) > svg:nth-of-type(1) {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+/* Make footer 'SF' logo badge container spectacular green in both themes */
+div#root:nth-of-type(1) > div:nth-of-type(1) > footer:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) {
+  background-color: #10B981 !important;
+  color: #050811 !important;
+  font-weight: 950 !important;
+  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.35) !important;
+}
+
+/* Style targeted community XP count to show a dynamic green highlight in both themes */
+div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) {
+  color: #10B981 !important;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.4) !important;
+  font-weight: 950 !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Style selector 1 (partner count) */
+div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) {
+  font-weight: 900 !important;
+  font-family: inherit !important;
+}
+
+/* Style selector 2 (Parteneri & Sponsori label) */
+div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) {
+  font-weight: 600 !important;
+  letter-spacing: 0.025em !important;
+}
+
+/* Selector 1 - Clear legacy white background from first lesson text area to make it completely transparent and unified */
+div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Selector 2 - Dark Mode Card background same as the larger box and no outline */
+div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) {
+  background-color: #0F1322 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Selector 2 - Light Mode Card background white and no outline */
+.light-mode div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) {
+  background-color: #FFFFFF !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Selector 2 Text Color Fix - Light Mode Title */
+.light-mode div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) span.text-white {
+  color: #1E293B !important;
+}
+
+/* Selector 2 - Cont Nou button styled with high-contrast white-ish light grey, dark text and an outline */
+div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(2) {
+  background-color: #E2E8F0 !important;
+  color: #0F172A !important;
+  font-weight: 700 !important;
+  border: 2px solid #94A3B8 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(2):hover {
+  background-color: #0F172A !important;
+  color: #FFFFFF !important;
+  border-color: #0F172A !important;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) {
+  font-weight: 900 !important;
+  color: #FFFFFF !important;
+}
+
+.light-mode div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) {
+  color: #000000 !important;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(2) {
+  transition: all 0.25s ease-in-out !important;
+}
+
+/* Highly motivational pulse and flicker animation for completed section progress bars > 50% */
+@keyframes progress-flicker-pulse {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1.25) drop-shadow(0 0 5px rgba(16, 185, 129, 0.75));
+  }
+  25% {
+    opacity: 0.82;
+    filter: brightness(1.0) drop-shadow(0 0 2px rgba(16, 185, 129, 0.3));
+  }
+  30% {
+    opacity: 0.95;
+    filter: brightness(1.35) drop-shadow(0 0 8px rgba(16, 185, 129, 0.9));
+  }
+  40% {
+    opacity: 0.75;
+    filter: brightness(0.9) drop-shadow(0 0 1px rgba(16, 185, 129, 0.1));
+  }
+  45% {
+    opacity: 1;
+    filter: brightness(1.3) drop-shadow(0 0 6px rgba(16, 185, 129, 0.8));
+  }
+  75% {
+    opacity: 0.88;
+    filter: brightness(1.05) drop-shadow(0 0 3px rgba(16, 185, 129, 0.4));
+  }
+}
+
+.animate-flicker-pulse {
+  animation: progress-flicker-pulse 2s infinite ease-in-out;
+}
+
+/* --- KEEP VIBRANT GREEN GLOW STYLING ONLY FOR PULSING BULLET/DOT POINTS (LIKE STATUS BULLETS) --- */
+.pulse-bullet,
+span.animate-pulse.rounded-full {
+  background-color: #10B981 !important;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.95), 0 0 6px rgba(16, 185, 129, 0.6) !important;
+}
+
+/* --- OPTIMIZE MOBILE SCREEN ALIGNMENT & PREVENT SIDEWAYS/VERTICAL SCROLLING BUGS --- */
+html,
+body,
+#root {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure child elements properly adhere to parents layout boxes without overflow-x */
+* {
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 640px) {
+  /* Prevent side overflow from parent flexes and margins */
+  .max-w-7xl,
+  .max-w-4xl,
+  main {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+}
+
+/* Make selected name changer button same height as the input, a compact square bifa */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > button:nth-of-type(1) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+  padding: 0 !important;
+  margin-top: 0 !important;
+  position: relative !important;
+  transform: none !important;
+  background-color: #10B981 !important;
+  color: #050811 !important;
+  border-radius: 12px !important;
+  border: 1px solid #10B981 !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
+  cursor: pointer !important;
+  overflow: visible !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transition: all 0.2s ease-in-out !important;
+  box-sizing: border-box !important;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > button:nth-of-type(1):hover {
+  background-color: #059669 !important;
+  border-color: #059669 !important;
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.3) !important;
+  color: #FFFFFF !important;
+  transform: scale(1.05) !important;
+}
+
+.light-mode div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > button:nth-of-type(1) {
+  background-color: #10B981 !important;
+  color: #FFFFFF !important;
+  border-color: #10B981 !important;
+}
+
+/* Ensure the input box has the exact same matching height */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > input#edit-profile-name-input-rich:nth-of-type(1) {
+  height: 38px !important;
+  box-sizing: border-box !important;
+  border-radius: 12px !important;
+}
+
+
+
+
+
+
+
+
+
+
+
