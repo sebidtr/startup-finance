@@ -44,6 +44,9 @@ export interface UserProfile {
   profilePhotoUrl?: string;
   profilePhotoZoom?: number;
   accountCode?: string;
+  gems?: number;
+  xpBoosterActiveUntil?: string;
+  xpBoosterNextBuyAvailable?: string;
   dailyQuests?: {
     chatAsked: boolean;
     nodeCompleted: boolean;

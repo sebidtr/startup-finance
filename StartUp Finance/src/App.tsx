@@ -8,6 +8,7 @@ import {
   Award, 
   BookOpen, 
   Flame, 
+  Gem,
   Lock, 
   Map,
   LineChart,
@@ -305,6 +306,7 @@ export default function App() {
   });
   const [isProfileLoadedFromServer, setIsProfileLoadedFromServer] = useState<boolean>(false);
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('sf_theme');
     return (saved as 'light' | 'dark') || 'light';
@@ -490,6 +492,7 @@ export default function App() {
   const [googleCustomEmail, setGoogleCustomEmail] = useState<string>("");
   const [googleCustomName, setGoogleCustomName] = useState<string>("");
   const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [errorToast, setErrorToast] = useState<string | null>(null);
 
   // Mobile navigation drawer state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
@@ -837,6 +840,14 @@ export default function App() {
     }
   }, [successToast]);
 
+  // Auto-clear error toast helper
+  useEffect(() => {
+    if (errorToast) {
+      const t = setTimeout(() => setErrorToast(null), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [errorToast]);
+
   // Save state updates
   useEffect(() => {
     localStorage.setItem('sf_logged_in', String(isLoggedIn));
@@ -1093,6 +1104,10 @@ export default function App() {
         });
 
         // Update user metrics cleanly
+        const isBoosterActiveNow = userProfile.xpBoosterActiveUntil && new Date() < new Date(userProfile.xpBoosterActiveUntil);
+        const xpMultiplier = isBoosterActiveNow ? 2 : 1;
+        const finalEarnedXp = earnedXP * xpMultiplier;
+
         setUserProfile(prev => {
           const updatedCompleted = prev.completedNodes.includes(activeModalNode.id)
             ? prev.completedNodes
@@ -1109,10 +1124,44 @@ export default function App() {
               setSuccessToast("Misiune deblocată! +15 XP pentru finalizarea unui modul de curs! 🎓⚡");
             }, 1000);
           }
+
+          const pMultiplier = (prev.xpBoosterActiveUntil && new Date() < new Date(prev.xpBoosterActiveUntil)) ? 2 : 1;
+          const userFinalEarnedXp = earnedXP * pMultiplier;
+          const userFinalQuestXp = extraQuestXP * pMultiplier;
+
+          // Gems rewards
+          const hasBeenCompleted = prev.completedNodes.includes(activeModalNode.id);
+          let gemsEarned = 0;
+          if (!hasBeenCompleted) {
+            gemsEarned += 2; // 2 gems per lesson finished
+          }
+
+          // Entire course completed check (+30 gems)
+          let finishedAnotherCourse = false;
+          let finishedCourseName = "";
+          Object.entries(branchesData).forEach(([key, branch]) => {
+            const nodes = branch.nodes || [];
+            if (nodes.length > 0 && nodes.some(n => n.id === activeModalNode.id)) {
+              const wasCompletedBefore = nodes.every(n => prev.completedNodes.includes(n.id));
+              const isCompletedNow = nodes.every(n => updatedCompleted.includes(n.id));
+              if (!wasCompletedBefore && isCompletedNow) {
+                finishedAnotherCourse = true;
+                finishedCourseName = branch.title;
+              }
+            }
+          });
+
+          if (finishedAnotherCourse) {
+            gemsEarned += 30; // 30 gems for finishing a whole course
+            setTimeout(() => {
+              setSuccessToast(`Felicitări extreme! Ai finalizat cursul selectat "${finishedCourseName}"! +30 Gemuri adăugate! 💎🏆`);
+            }, 1600);
+          }
             
           return {
             ...prev,
-            xp: prev.xp + earnedXP + extraQuestXP,
+            xp: prev.xp + userFinalEarnedXp + userFinalQuestXp,
+            gems: (prev.gems ?? 0) + gemsEarned,
             completedNodes: updatedCompleted,
             dailyQuests: quests
           };
@@ -1122,7 +1171,7 @@ export default function App() {
         setTimeout(() => {
           setShowQuizCelebration({
             nodeTitle: activeModalNode.title,
-            xpEarned: earnedXP
+            xpEarned: finalEarnedXp
           });
         }, 750);
       } else {
@@ -1298,6 +1347,32 @@ export default function App() {
         console.warn("Eroare Google sign in:", err);
         setAuthError("Eroare la autentificarea cu Google: " + (err?.message || "Eroare de popup"));
       });
+  };
+
+  // Local Guest Session (Bypass for whitelisting / network blocks)
+  const handleLocalLogin = () => {
+    setIsLoggedIn(true);
+    setLoggedInEmail("local_guest@startupfinance.local");
+    setIsProfileLoadedFromServer(true);
+    
+    const saved = localStorage.getItem('sf_user_profile');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setUserProfile(parsed);
+        setSuccessToast("Sesiune Oaspete Locală reluată! Progresul tău este în siguranță. 💾");
+      } catch (e) {
+        setSuccessToast("Sesiune Oaspete Locală activată! Toate datele se salvează în browser. 💾");
+      }
+    } else {
+      setUserProfile(prev => ({
+        ...prev,
+        name: prev.name === "Vizitator" ? "Pionier Financiar" : prev.name,
+        gems: prev.gems ?? 15, // start guest session with 15 gems to test booster
+      }));
+      setSuccessToast("Sesiune Oaspete Locală activată! Toate datele se salvează în browser. 💾");
+    }
+    setActivePage('invatare');
   };
 
   // Legacy fallback simulated Google helper for compatibility
@@ -1743,7 +1818,7 @@ export default function App() {
               referrerPolicy="no-referrer"
               className="aspect-square w-10 h-10 md:w-11 h-11 rounded-lg md:rounded-xl object-contain group-hover:scale-110 group-hover:rotate-3 active:scale-90 transition-all duration-300 shadow-[0_0_12px_rgba(16,185,129,0.3)] bg-transparent outline-none border-none animate-pulse-slow object-cover"
             />
-            <span className={`font-display font-bold text-base md:text-lg tracking-tight transition-colors ${
+            <span className={`font-display font-black text-base md:text-lg tracking-tight transition-colors ${
               theme === 'light' ? 'text-slate-800' : 'text-white'
             } group-hover:text-[#10B981]`}>
               StartUp <span className="text-[#10B981]">Finance</span>
@@ -1770,6 +1845,21 @@ export default function App() {
                     <AnimatedCountUp value={userProfile.xp} /> XP
                   </span>
                 </div>
+
+                <div className={`flex items-center gap-1 border px-2.5 py-1.5 rounded-xl shrink-0 transition-colors ${
+                  theme === 'light' ? 'bg-slate-50 border-slate-250 text-slate-800' : 'bg-[#0F1322] border-[#1F293D]'
+                }`}>
+                  <Gem className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                  <span className={`text-xs font-mono font-bold ${theme === 'light' ? 'text-slate-800' : 'text-[#10B981]'}`}>
+                    <AnimatedCountUp value={userProfile.gems || 0} /> 💎
+                  </span>
+                </div>
+
+                {userProfile.xpBoosterActiveUntil && new Date() < new Date(userProfile.xpBoosterActiveUntil) && (
+                  <div className="flex items-center gap-1 border border-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-xl shrink-0 text-[#10B981] font-bold font-mono text-[10px] animate-pulse" title="2x XP Multiplier Activ!">
+                    🚀 2x XP
+                  </div>
+                )}
               </div>
             )}
 
@@ -1907,13 +1997,21 @@ export default function App() {
                         </span>
                       </div>
                       
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         <div className="flex items-center gap-1 bg-[#10B981]/10 border border-[#10B981]/20 px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold text-[#10B981]">
                           <Zap className="w-3.5 h-3.5" /> <AnimatedCountUp value={userProfile.xp} /> XP
                         </div>
                         <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold text-amber-500">
                           <Flame className="w-3.5 h-3.5 fill-current" /> {userProfile.streak || 1} Z
                         </div>
+                        <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold text-[#10B981]">
+                          <Gem className="w-3 h-3 text-emerald-400" /> {userProfile.gems || 0} 💎
+                        </div>
+                        {userProfile.xpBoosterActiveUntil && new Date() < new Date(userProfile.xpBoosterActiveUntil) && (
+                          <div className="flex items-center gap-1 bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold text-[#10B981] animate-pulse">
+                            🚀 2x XP
+                          </div>
+                        )}
                       </div>
 
                       <button
@@ -2379,6 +2477,20 @@ export default function App() {
                       </svg>
                       Autentificare rapidă Google
                     </button>
+
+                    <div className="pt-2">
+                      <span className="h-[1px] grow bg-[#1F293D] block my-3"></span>
+                      <p className="text-[10px] text-[#64748B] text-center leading-relaxed mb-3">
+                        ⚠️ Probleme de conexiune pe Netlify/GitHub? Adaugă domeniul tău în Firebase Console &gt; Authorized Domains. Sau pornește instant modul local offline:
+                      </p>
+                      
+                      <button
+                        onClick={handleLocalLogin}
+                        className="w-full bg-[#10B981]/15 hover:bg-[#10B981]/25 border border-[#10B981]/30 text-[#10B981] font-bold text-xs py-3 px-4 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        ⚡ Continuă ca Oaspete (Salvare Locală)
+                      </button>
+                    </div>
                   </div>
 
                   <div className="text-center pt-2">
@@ -2515,109 +2627,116 @@ export default function App() {
                     invatareTab === 'harta' ? (
                       // Section Choice Grid
                       <div className="space-y-8">
-                      <div className="text-center md:text-left space-y-1">
-                        <div className="inline-flex items-center gap-1.5 text-xs font-bold font-mono text-[#10B981] bg-[#10B981]/10 px-3 py-1 rounded-full uppercase tracking-wider">
-                          🎓 alege ceea ce vrei să înveți
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="text-center md:text-left space-y-1">
+                          <div className="inline-flex items-center gap-1.5 text-xs font-bold font-mono text-[#10B981] bg-[#10B981]/10 px-3 py-1 rounded-full uppercase tracking-wider">
+                            🎓 alege ceea ce vrei să înveți
+                          </div>
+                          <h3 className="font-display text-xl md:text-3xl font-black text-white tracking-tight text-left">
+                            Capitolele Educației Tale Financiare
+                          </h3>
+                          <p className="text-[#64748B] text-xs md:text-sm font-semibold max-w-2xl leading-relaxed text-left">
+                            Alege oricare dintre cele 6 secțiuni interactive. Fiecare conține o serie de cursuri distractive (complet gratuite) concepute special pentru a-ți asigura succesul practic.
+                          </p>
                         </div>
-                        <h3 className="font-display text-xl md:text-3xl font-black text-white tracking-tight text-left">
-                          Capitolele Educației Tale Financiare
-                        </h3>
-                        <p className="text-[#64748B] text-xs md:text-sm font-semibold max-w-2xl leading-relaxed text-left">
-                          Alege oricare dintre cele 7 secțiuni interactive. Fiecare conține o serie de cursuri distractive (complet gratuite) concepute special pentru a-ți asigura succesul practic.
-                        </p>
+
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {Object.entries(branchesData).map(([sectionKey, branch]) => {
-                          const sectionNodes = branch.nodes;
-                          const completedCount = sectionNodes.filter(n => userProfile.completedNodes.includes(n.id)).length;
-                          const totalCount = sectionNodes.length;
-                          const progressPercent = Math.round((completedCount / totalCount) * 100);
-                          const isFinished = completedCount === totalCount;
+                        {(() => {
+                          return Object.entries(branchesData).map(([sectionKey, branch]) => {
+                            const sectionNodes = branch.nodes || [];
+                            const completedCount = sectionNodes.filter(n => userProfile.completedNodes.includes(n.id)).length;
+                            const totalCount = sectionNodes.length;
+                            const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+                            const isFinished = totalCount > 0 && completedCount === totalCount;
 
-                          // Dynamic assign preselected icons
-                          let IconComp = Rocket;
-                          let themeColor = "text-[#10B981] bg-[#10B981]/15 border-[#10B981]/20";
-                          let badgeBg = "bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20";
-                          
-                          if (sectionKey === 'how_to_start_first_startup') {
-                            IconComp = Rocket;
-                            themeColor = "text-[#10B981] bg-[#10B981]/15 border-[#10B981]/25 hover:border-[#10B981]/40";
-                          } else if (sectionKey === 'finance') {
-                            IconComp = Zap;
-                            themeColor = "text-[#F59E0B] bg-[#F59E0B]/15 border-[#F59E0B]/25 hover:border-[#F59E0B]/40";
-                            badgeBg = "bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20";
-                          } else if (sectionKey === 'economics') {
-                            IconComp = BookOpen;
-                            themeColor = "text-[#4285F4] bg-[#4285F4]/15 border-[#4285F4]/25 hover:border-[#4285F4]/40";
-                            badgeBg = "bg-[#4285F4]/10 text-[#4285F4] border-[#4285F4]/20";
-                          } else if (sectionKey === 'startup') {
-                            IconComp = Award;
-                            themeColor = "text-emerald-400 bg-emerald-400/15 border-emerald-400/25 hover:border-emerald-400/40";
-                            badgeBg = "bg-emerald-400/10 text-emerald-400 border-emerald-400/20";
-                          } else if (sectionKey === 'marketing') {
-                            IconComp = TrendingUp;
-                            themeColor = "text-fuchsia-400 bg-fuchsia-400/15 border-fuchsia-400/25 hover:border-fuchsia-400/40";
-                            badgeBg = "bg-fuchsia-400/10 text-fuchsia-400 border-fuchsia-400/20";
-                          } else if (sectionKey === 'investing') {
-                            IconComp = Sparkles;
-                            themeColor = "text-[#10C9C1] bg-[#10C9C1]/15 border-[#10C9C1]/25 hover:border-[#10C9C1]/40";
-                            badgeBg = "bg-[#10C9C1]/10 text-[#10C9C1] border-[#10C9C1]/20";
-                          } else if (sectionKey === 'networking') {
-                            IconComp = Users;
-                            themeColor = "text-sky-400 bg-sky-400/15 border-sky-400/25 hover:border-sky-400/40";
-                            badgeBg = "bg-sky-400/10 text-sky-400 border-sky-400/20";
-                          }
+                            // Dynamic assign preselected icons
+                            let IconComp = Rocket;
+                            let themeColor = "text-[#10B981] bg-[#10B981]/15 border-[#10B981]/25 hover:border-[#10B981]/40";
+                            let badgeBg = "bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20";
+                            
+                            if (sectionKey === 'how_to_start_first_startup') {
+                              IconComp = Rocket;
+                              themeColor = "text-[#10B981] bg-[#10B981]/15 border-[#10B981]/25 hover:border-[#10B981]/40";
+                            } else if (sectionKey === 'finance') {
+                              IconComp = Zap;
+                              themeColor = "text-[#F59E0B] bg-[#F59E0B]/15 border-[#F59E0B]/25 hover:border-[#F59E0B]/40";
+                              badgeBg = "bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20";
+                            } else if (sectionKey === 'economics') {
+                              IconComp = BookOpen;
+                              themeColor = "text-[#4285F4] bg-[#4285F4]/15 border-[#4285F4]/25 hover:border-[#4285F4]/40";
+                              badgeBg = "bg-[#4285F4]/10 text-[#4285F4] border-[#4285F4]/20";
+                            } else if (sectionKey === 'startup') {
+                              IconComp = Award;
+                              themeColor = "text-emerald-400 bg-emerald-400/15 border-emerald-400/25 hover:border-emerald-400/40";
+                              badgeBg = "bg-emerald-400/10 text-emerald-400 border-emerald-400/20";
+                            } else if (sectionKey === 'marketing') {
+                              IconComp = TrendingUp;
+                              themeColor = "text-fuchsia-400 bg-fuchsia-400/15 border-fuchsia-400/25 hover:border-fuchsia-400/40";
+                              badgeBg = "bg-fuchsia-400/10 text-fuchsia-400 border-fuchsia-400/20";
+                            } else if (sectionKey === 'investing') {
+                              IconComp = Sparkles;
+                              themeColor = "text-[#10C9C1] bg-[#10C9C1]/15 border-[#10C9C1]/25 hover:border-[#10C9C1]/40";
+                              badgeBg = "bg-[#10C9C1]/10 text-[#10C9C1] border-[#10C9C1]/20";
+                            } else if (sectionKey === 'networking') {
+                              IconComp = Users;
+                              themeColor = "text-sky-400 bg-sky-400/15 border-sky-400/25 hover:border-sky-400/40";
+                              badgeBg = "bg-sky-400/10 text-sky-400 border-sky-400/20";
+                            }
 
-                          return (
-                            <div
-                              key={sectionKey}
-                              onClick={() => setSelectedSection(sectionKey)}
-                              className="bg-[#0F1322] border border-[#1F293D] hover:border-[#10B981]/50 p-6 rounded-2xl flex flex-col justify-between space-y-6 transition-all duration-300 shadow-lg cursor-pointer hover:-translate-y-1 active:scale-98 group"
-                            >
-                              <div className="space-y-4">
-                                <div className="flex justify-between items-start">
-                                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${themeColor.split(' ')[0]} ${themeColor.split(' ')[1]} ${themeColor.split(' ')[2]}`}>
-                                    <IconComp className="w-6 h-6" />
+                            return (
+                              <div
+                                key={sectionKey}
+                                onClick={() => {
+                                  setSelectedSection(sectionKey);
+                                }}
+                                className="bg-[#0F1322] border border-[#1F293D] hover:border-[#10B981]/50 cursor-pointer hover:-translate-y-1 active:scale-98 group p-6 rounded-2xl flex flex-col justify-between space-y-4 transition-all duration-300 shadow-lg"
+                              >
+                                <div className="space-y-4">
+                                  <div className="flex justify-between items-start">
+                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${themeColor.split(' ')[0]} ${themeColor.split(' ')[1]} ${themeColor.split(' ')[2]}`}>
+                                      <IconComp className="w-6 h-6" />
+                                    </div>
+                                    <span className={`text-[10px] font-bold font-mono tracking-wider px-2.5 py-1 rounded-full border ${badgeBg}`}>
+                                      {completedCount}/{totalCount} finalizate
+                                    </span>
                                   </div>
-                                  <span className={`text-[10px] font-bold font-mono tracking-wider px-2.5 py-1 rounded-full border ${badgeBg}`}>
-                                    {completedCount}/{totalCount} finalizate
-                                  </span>
+
+                                  <div className="space-y-1.5 text-left">
+                                    <h4 className="font-display font-black text-base text-white group-hover:text-[#10B981] transition-colors leading-tight">
+                                      {branch.title.replace(/^\d+\.\s*/, '')}
+                                    </h4>
+                                    <p className="text-xs text-[#64748B] font-semibold leading-relaxed line-clamp-3">
+                                      {branch.category} • {sectionNodes[0]?.desc}
+                                    </p>
+                                  </div>
                                 </div>
 
-                                <div className="space-y-1.5 text-left">
-                                  <h4 className="font-display font-black text-base text-white group-hover:text-[#10B981] transition-colors leading-tight">
-                                    {branch.title.replace(/^\d+\.\s*/, '')}
-                                  </h4>
-                                  <p className="text-xs text-[#64748B] font-semibold leading-relaxed line-clamp-3">
-                                    {branch.category} • {sectionNodes[0]?.desc}
-                                  </p>
+                                {/* Progress bar info for section */}
+                                <div className="space-y-2 text-left pt-2">
+                                  <div className="flex items-center justify-between text-[11px] font-mono font-bold">
+                                    <span className="text-[#64748B]">PROGRES</span>
+                                    <span className={isFinished ? "text-[#10B981]" : "text-white"}>{progressPercent}%</span>
+                                  </div>
+                                  <div className="h-1.5 w-full bg-[#1E2538] rounded-full overflow-hidden">
+                                    <div 
+                                      className={`h-full rounded-full transition-all duration-500 ${
+                                        isFinished ? "bg-[#10B981]" : "bg-[#10B981]/70"
+                                      } ${progressPercent > 50 ? "animate-flicker-pulse" : ""}`}
+                                      style={{ width: `${progressPercent}%` }}
+                                    ></div>
+                                  </div>
+
+                                  <div className="pt-2 flex items-center justify-between text-xs font-bold text-[#10B981]">
+                                    <span>{isFinished ? "Revizuiește modulul ✓" : "Începe studiul ⚡"}</span>
+                                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                                  </div>
                                 </div>
                               </div>
-
-                              {/* Progress bar info for section */}
-                              <div className="space-y-2 text-left pt-2">
-                                <div className="flex items-center justify-between text-[11px] font-mono font-bold">
-                                  <span className="text-[#64748B]">PROGRES</span>
-                                  <span className={isFinished ? "text-[#10B981]" : "text-white"}>{progressPercent}%</span>
-                                </div>
-                                <div className="h-1.5 w-full bg-[#1E2538] rounded-full overflow-hidden">
-                                  <div 
-                                    className={`h-full rounded-full transition-all duration-500 ${
-                                      isFinished ? "bg-[#10B981]" : "bg-[#10B981]/70"
-                                    } ${progressPercent > 50 ? "animate-flicker-pulse" : ""}`}
-                                    style={{ width: `${progressPercent}%` }}
-                                  ></div>
-                                </div>
-
-                                <div className="pt-2 flex items-center justify-between text-xs font-bold text-[#10B981]">
-                                  <span>{isFinished ? "Revizuiește modulul ✓" : "Începe studiul ⚡"}</span>
-                                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          });
+                        })()}
                       </div>
                     </div>
                   ) : (
@@ -2838,9 +2957,9 @@ export default function App() {
                                     
                                     // Add stock current value
                                     Object.entries(brokerShares).forEach(([sym, qty]) => {
-                                      const stock = brokerStocks[sym];
+                                      const stock = brokerStocks[sym] as { name: string; price: number; currency: 'USD' | 'RON' | 'EUR'; type: 'BVB' | 'US' | 'EU'; history: number[] } | undefined;
                                       if (stock) {
-                                        let assetVal = stock.price * qty;
+                                        let assetVal = stock.price * (qty as number);
                                         if (stock.currency === 'USD') {
                                           assetVal *= 4.60;
                                         } else if (stock.currency === 'EUR') {
@@ -2872,7 +2991,8 @@ export default function App() {
                               </div>
 
                               <div className="space-y-2 overflow-y-auto max-h-[360px] pr-1">
-                                {Object.entries(brokerStocks).map(([symbol, stock]) => {
+                                {Object.entries(brokerStocks).map(([symbol, rawStock]) => {
+                                  const stock = rawStock as { name: string; price: number; currency: 'USD' | 'RON' | 'EUR'; type: 'BVB' | 'US' | 'EU'; history: number[] };
                                   // compute simulated trend change
                                   const trendPercent = stock.history.length > 1 
                                     ? ((stock.price - stock.history[stock.history.length - 2]) / stock.history[stock.history.length - 2]) * 100
@@ -3141,10 +3261,10 @@ export default function App() {
                                     theme === 'light' ? 'divide-slate-100' : 'divide-[#1f293d]/50'
                                   }`}>
                                     {Object.entries(brokerShares).map(([sym, qty]) => {
-                                      const stock = brokerStocks[sym];
+                                      const stock = brokerStocks[sym] as { name: string; price: number; currency: 'USD' | 'RON' | 'EUR'; type: 'BVB' | 'US' | 'EU'; history: number[] } | undefined;
                                       if (!stock) return null;
                                       
-                                      const totalValRaw = stock.price * qty;
+                                      const totalValRaw = stock.price * (qty as number);
                                       
                                       return (
                                         <tr key={sym} className={theme === 'light' ? 'text-slate-800' : 'text-neutral-200'}>
@@ -4154,78 +4274,100 @@ export default function App() {
                     theme === 'light' ? 'bg-white border-slate-200 shadow-sm shadow-slate-100' : 'bg-[#0C0F19] border-[#1F293D]'
                   }`}>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 animate-pulse">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-[#10B981] animate-pulse">
                         <Award className="w-5 h-5" />
                       </div>
                       <div className="space-y-0.5 text-left">
-                        <h4 className={`font-bold text-sm ${theme === 'light' ? 'text-slate-800' : 'text-white'}`}>Finanțat de Cunoștințe</h4>
+                        <h4 className={`font-bold text-sm ${theme === 'light' ? 'text-slate-800' : 'text-white'}`}>Magazinul Oficial de Recompense 💎</h4>
                         <p className={`text-xs ${theme === 'light' ? 'text-slate-500' : 'text-[#64748B]'}`}>
-                          Fiecare resursă deblocată devine disponibilă instantaneu în panoul tău personal de sclipiri antreprenoriale.
+                          Cheltuiește-ți gemurile câștigate în mod inteligent pentru a-ți accelera educația financiară!
                         </p>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
                       <span className={`text-xs font-mono ${theme === 'light' ? 'text-slate-500' : 'text-[#64748B]'}`}>Balanța ta:</span>
-                      <p className="text-lg font-extrabold text-amber-500 font-mono"><AnimatedCountUp value={userProfile.xp} /> XP Disponibil</p>
+                      <p className="text-lg font-extrabold text-[#10B981] font-mono"><AnimatedCountUp value={userProfile.gems || 0} /> Gemuri 💎</p>
                     </div>
                   </div>
  
                   {/* SHOP GRID */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {(() => {
-                      // Items with react renders
                       const unlockedItems = userProfile.unlockedItems || [];
                       
                       const items = [
                         {
-                          id: "pfa_guide",
-                          title: "Ghid Premium: ANAF, e-Factura & PFA",
-                          description: "Planul complet pas-cu-pas de declarare dări, înregistrare PFA rapidă și ghid e-Factura actualizat pentru legile din 2026 în România.",
-                          cost: 350,
-                          badge: "Ghid Fiscal"
+                          id: "xp_booster",
+                          title: "XP Booster (Instant 2x XP)",
+                          description: "Îți dublează orice XP pe care îl primești din teste și misiuni zilnice timp de 20 de minute. Excelent pentru a urca rapid în clasament! Cooldown: 1h.",
+                          cost: 15,
+                          badge: "Booster Activ"
                         },
                         {
-                          id: "one_page_plan",
-                          title: "Template: One-Page Business Plan",
-                          description: "Un builder interactiv digital direct pe platformă. Scrie, planifică-ți Startup-ul și exportă oricând în format Markdown complet.",
-                          cost: 500,
-                          badge: "Template Afacere"
+                          id: "secret_investments",
+                          title: "Ghid Premium: Investiții Secrete & AI",
+                          description: "Scurtături folosite de marii investitori, strategii nespuse de arbitraj financiar și analiză de active realizată de roboti AI exclusivi.",
+                          cost: 45,
+                          badge: "Secrete VIP"
                         },
                         {
-                          id: "mom_test_cheat",
-                          title: "The Mom Test Simulator & Script",
-                          description: "Verificator interactiv de întrebări pentru a afla dacă aserțiunile tale încalcă Rob Fitzpatrick's Book și script complet de interviu clienți.",
-                          cost: 200,
-                          badge: "Simulator Clienți"
+                          id: "billionaire_secrets",
+                          title: "Acces la Cursul Ascuns: Secretele Miliardarilor",
+                          description: "Investigații interactive, tactici de negociere extremă și template-ul exact de Pitch Deck folosit de unicorni pentru a ridica miliarde!",
+                          cost: 70,
+                          badge: "Curs Ultra-VIP"
                         },
                         {
                           id: "travis_vip",
                           title: "Membru de Elită VIP Status",
                           description: "Deblochează statutul legendar de Elite Antreprenor. Te ridică la rangul de investitor de top în ecosistemul StartUp Finance, oferindu-ți credentialul VIP exclusiv!",
-                          cost: 400,
+                          cost: 100,
                           badge: "Statut Elite"
                         }
                       ];
  
                       return items.map((item) => {
                         const isUnlocked = unlockedItems.includes(item.id);
-                        const canAfford = userProfile.xp >= item.cost;
- 
+                        const userGems = userProfile.gems ?? 0;
+                        const canAfford = userGems >= item.cost;
+
+                        // Booster states
+                        const now = new Date();
+                        const activeUntil = userProfile.xpBoosterActiveUntil ? new Date(userProfile.xpBoosterActiveUntil) : null;
+                        const nextBuy = userProfile.xpBoosterNextBuyAvailable ? new Date(userProfile.xpBoosterNextBuyAvailable) : null;
+                        const isBoosterActive = item.id === 'xp_booster' && activeUntil && now < activeUntil;
+                        const isBoosterInCooldown = item.id === 'xp_booster' && nextBuy && now < nextBuy;
+                        
+                        const boosterActiveRemMin = activeUntil ? Math.max(0, Math.ceil((activeUntil.getTime() - now.getTime()) / 60000)) : 0;
+                        const boosterCooldownRemMin = nextBuy ? Math.max(0, Math.ceil((nextBuy.getTime() - now.getTime()) / 60000)) : 0;
+
                         return (
                           <div 
                             key={item.id} 
                             className={`border rounded-2xl p-6 flex flex-col justify-between space-y-4 transition-all relative overflow-hidden ${
-                              isUnlocked 
-                                ? theme === 'light'
-                                  ? "border-[#10B981]/60 bg-white shadow-md shadow-[#10B981]/10"
-                                  : "border-[#10B981]/50 bg-[#090D1A] shadow-lg shadow-[#10B981]/5"
-                                : theme === 'light'
-                                  ? "border-slate-200 bg-white hover:border-slate-350 shadow-xs"
-                                  : "border-[#1F293D] bg-[#090D1A] hover:border-zinc-700"
+                              isBoosterActive
+                                ? "border-emerald-500 bg-[#090D1A] shadow-xl shadow-emerald-500/10"
+                                : (item.id !== 'xp_booster' && isUnlocked)
+                                  ? theme === 'light'
+                                    ? "border-[#10B981]/60 bg-white shadow-md shadow-[#10B981]/10"
+                                    : "border-[#10B981]/50 bg-[#090D1A] shadow-lg shadow-[#10B981]/5"
+                                  : theme === 'light'
+                                    ? "border-slate-200 bg-white hover:border-slate-350 shadow-xs"
+                                    : "border-[#1F293D] bg-[#090D1A] hover:border-zinc-700"
                             }`}
                           >
                             {/* Unlocked marker */}
-                            {isUnlocked && (
+                            {isBoosterActive && (
+                              <div className="absolute top-0 right-0 bg-emerald-500 text-black text-[9px] font-extrabold uppercase px-3 py-1 rounded-bl-xl shadow-sm animate-pulse">
+                                Activ (2x XP) 🔥
+                              </div>
+                            )}
+                            {item.id === 'xp_booster' && isBoosterInCooldown && !isBoosterActive && (
+                              <div className="absolute top-0 right-0 bg-[#334155] text-[#94A3B8] text-[9px] font-extrabold uppercase px-3 py-1 rounded-bl-xl shadow-sm">
+                                Cooldown ⏳
+                              </div>
+                            )}
+                            {item.id !== 'xp_booster' && isUnlocked && (
                               <div className="absolute top-0 right-0 bg-[#10B981] text-black text-[9px] font-extrabold uppercase px-3 py-1 rounded-bl-xl shadow-sm">
                                 Deblocat ✓
                               </div>
@@ -4233,45 +4375,108 @@ export default function App() {
  
                             <div className="space-y-3 text-left">
                               <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-mono font-bold tracking-wider uppercase text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                                  {item.badge}
+                                <span className="text-[10px] font-mono font-bold tracking-wider uppercase text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 rounded border border-[#10B981]/25">
+                                  {item.id === 'xp_booster' && isBoosterActive 
+                                    ? `XP Booster Activ` 
+                                    : item.id === 'xp_booster' && isBoosterInCooldown 
+                                      ? `In Cooldown` 
+                                      : item.badge}
                                 </span>
-                                {!isUnlocked && (
-                                  <span className="text-xs font-mono font-bold text-amber-500">
-                                    {item.cost} XP
-                                  </span>
+                                
+                                {item.id === 'xp_booster' ? (
+                                  isBoosterActive ? (
+                                    <span className="text-xs font-mono font-extrabold text-[#10B981]">
+                                      {boosterActiveRemMin} min rămase
+                                    </span>
+                                  ) : isBoosterInCooldown ? (
+                                    <span className="text-xs font-mono font-bold text-amber-500">
+                                      {boosterCooldownRemMin} min cooldown
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs font-mono font-extrabold text-[#10B981]">
+                                      15 Gemuri
+                                    </span>
+                                  )
+                                ) : (
+                                  !isUnlocked && (
+                                    <span className="text-xs font-mono font-extrabold text-[#10B981]">
+                                      {item.cost} Gemuri
+                                    </span>
+                                  )
                                 )}
                               </div>
                               <h4 className={`font-bold text-base md:text-lg ${theme === 'light' ? 'text-slate-800' : 'text-white'}`}>{item.title}</h4>
                               <p className={`text-xs leading-relaxed ${theme === 'light' ? 'text-slate-500' : 'text-[#64748B]'}`}>{item.description}</p>
                             </div>
- 
+
                             <div className="pt-2">
-                              {isUnlocked ? (
+                              {item.id === 'xp_booster' ? (
+                                isBoosterActive ? (
+                                  <button
+                                    disabled
+                                    className={`w-full py-2.5 font-extrabold rounded-xl text-xs text-center flex items-center justify-center gap-1.5 border cursor-not-allowed ${
+                                      theme === 'light'
+                                        ? "bg-emerald-50 text-emerald-600 border-emerald-250"
+                                        : "bg-emerald-500/20 text-[#10B981] border-emerald-500/30"
+                                    }`}
+                                  >
+                                    <Zap className="w-4 h-4 animate-bounce" /> Dual XP Multiplier Rulează ({boosterActiveRemMin}m)
+                                  </button>
+                                ) : isBoosterInCooldown ? (
+                                  <button
+                                    disabled
+                                    className={`w-full py-2.5 font-bold rounded-xl text-xs text-center flex items-center justify-center gap-1.5 border cursor-not-allowed ${
+                                      theme === 'light'
+                                        ? "bg-slate-100 text-slate-400 border-slate-200"
+                                        : "bg-[#1E293B]/60 text-zinc-500 border-[#334155]/30"
+                                    }`}
+                                  >
+                                    <Clock className="w-4 h-4" /> Cooldown Activ (Mai sunt {boosterCooldownRemMin}m)
+                                  </button>
+                                ) : (
+                                  <button
+                                    disabled={!canAfford}
+                                    onClick={() => setShopItemToUnlock(item)}
+                                    className={`w-full py-2.5 rounded-xl text-xs font-black transition-all text-center flex items-center justify-center gap-1.5 border ${
+                                      canAfford
+                                        ? theme === 'light'
+                                          ? "bg-emerald-50 hover:bg-emerald-100 border-emerald-250 text-emerald-700 cursor-pointer shadow-xs"
+                                          : "bg-slate-900 border-[#10B981]/40 text-[#10B981] hover:bg-[#10B981] hover:text-black cursor-pointer shadow-md"
+                                        : theme === 'light'
+                                          ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                                          : "bg-[#0B0F19] text-zinc-650 border-[#1F293D] cursor-not-allowed"
+                                    }`}
+                                  >
+                                    <Zap className="w-4 h-4" /> Activează Booster (15 Gemuri)
+                                  </button>
+                                )
+                              ) : isUnlocked ? (
                                 <button
                                   onClick={() => setOpenedPremiumResource(item.id)}
-                                  className="w-full py-2.5 bg-[#10B981] hover:bg-emerald-600 text-white font-extrabold rounded-xl text-xs transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5 shadow"
+                                  className={`w-full py-2.5 font-extrabold rounded-xl text-xs transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 shadow-sm border ${
+                                    theme === 'light'
+                                      ? "bg-white hover:bg-slate-50 text-slate-800 border-slate-250"
+                                      : "bg-[#1E293B] hover:bg-slate-800 text-[#10B981] border-[#334155]"
+                                  }`}
                                 >
-                                  <Unlock className="w-4 h-4 text-white" /> Deschide Resursa de Afaceri
+                                  <Unlock className="w-4 h-4" /> Deschide Resursa de Afaceri
                                 </button>
                               ) : (
                                 <button
                                   disabled={!canAfford}
-                                  onClick={() => {
-                                    setShopItemToUnlock(item);
-                                  }}
+                                  onClick={() => setShopItemToUnlock(item)}
                                   className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 border ${
                                     canAfford
                                       ? theme === 'light'
                                         ? "bg-slate-150 text-slate-800 hover:bg-slate-200 border-slate-200 cursor-pointer"
-                                        : "bg-[#1E293B] hover:bg-slate-800 text-amber-500 border-[#334155] cursor-pointer shadow-md"
+                                        : "bg-[#1E293B] hover:bg-slate-800 text-[#10B981] border-[#334155] cursor-pointer shadow-md"
                                       : theme === 'light'
                                         ? "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
                                         : "bg-[#0B0F19] text-zinc-600 border-[#1F293D] cursor-not-allowed"
                                   }`}
                                 >
                                   <Lock className="w-4 h-4" /> 
-                                  {canAfford ? `Deblochează pentru ${item.cost} XP` : `Fonduri XP Insuficiente (Necesar: ${item.cost})`}
+                                  {canAfford ? `Deblochează pentru ${item.cost} Gemuri` : `Gemuri Insuficiente (Necesar: ${item.cost})`}
                                 </button>
                               )}
                             </div>
@@ -4722,7 +4927,7 @@ ${onePagePlan.cost || "Nespecificat în plan."}
                 )}
               </AnimatePresence>
 
-              {/* MODAL DE CONFIRMARE PENTRU CUMPĂRAREA DIN MAGAZIN CU XP */}
+              {/* MODAL DE CONFIRMARE PENTRU CUMPĂRAREA DIN MAGAZIN CU GEMURI */}
               <AnimatePresence>
                 {shopItemToUnlock !== null && (
                   <div className="fixed inset-0 z-55 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
@@ -4736,19 +4941,19 @@ ${onePagePlan.cost || "Nespecificat în plan."}
                           : 'bg-[#0E1322] border-[#222E49] text-white'
                       }`}
                     >
-                      <div className="mx-auto w-12 h-12 rounded-full bg-amber-500/15 flex items-center justify-center text-amber-500 mb-2">
+                      <div className="mx-auto w-12 h-12 rounded-full bg-emerald-500/15 flex items-center justify-center text-[#10B981] mb-2">
                         <Lock className="w-5 h-5 animate-pulse" />
                       </div>
 
                       <div className="space-y-2">
-                        <span className="text-[10px] font-mono font-bold uppercase text-amber-500 bg-amber-500/10 px-2.5 py-0.5 rounded border border-amber-500/20">
+                        <span className="text-[10px] font-mono font-bold uppercase text-[#10B981] bg-[#10B981]/10 px-2.5 py-0.5 rounded border border-[#10B981]/25">
                           {shopItemToUnlock.badge}
                         </span>
                         <h3 className="font-display text-lg font-bold tracking-tight">
                           Confirmare Achiziție
                         </h3>
                         <p className={`text-xs leading-relaxed ${theme === 'light' ? 'text-slate-500' : 'text-[#64748B]'}`}>
-                          Ești sigur că dorești să deblochezi resursa <span className="font-bold text-[#10B981]">"{shopItemToUnlock.title}"</span> pentru <span className="font-extrabold text-amber-500 font-mono">{shopItemToUnlock.cost} XP</span>?
+                          Ești sigur că dorești să deblochezi <span className="font-bold text-[#10B981]">"{shopItemToUnlock.title}"</span> pentru <span className="font-extrabold text-[#10B981] font-mono">{shopItemToUnlock.cost} Gemuri 💎</span>?
                         </p>
                       </div>
 
@@ -4757,8 +4962,8 @@ ${onePagePlan.cost || "Nespecificat în plan."}
                           ? 'bg-slate-50 border-slate-200 text-slate-600'
                           : 'bg-[#060913] border-[#1F293D] text-[#64748B]'
                       }`}>
-                        <span>Balanța ta de XP:</span>
-                        <span className="font-bold text-amber-500"><AnimatedCountUp value={userProfile.xp} /> XP</span>
+                        <span>Balanța ta actuală:</span>
+                        <span className="font-bold text-[#10B981]"><AnimatedCountUp value={userProfile.gems || 0} /> Gemuri 💎</span>
                       </div>
 
                       <div className="flex gap-4">
@@ -4774,14 +4979,35 @@ ${onePagePlan.cost || "Nespecificat în plan."}
                         </button>
                         <button
                           onClick={() => {
-                            if (userProfile.xp >= shopItemToUnlock.cost) {
-                              setUserProfile(prev => ({
-                                ...prev,
-                                xp: prev.xp - shopItemToUnlock.cost,
-                                unlockedItems: [...(prev.unlockedItems || []), shopItemToUnlock.id]
-                              }));
-                              setSuccessToast(`Super! Resursa fiscală '${shopItemToUnlock.title}' a fost deblocată! 🛍️🎉`);
-                              setOpenedPremiumResource(shopItemToUnlock.id); // auto-open freshly bought resursa
+                            const userGems = userProfile.gems ?? 0;
+                            if (userGems >= shopItemToUnlock.cost) {
+                              if (shopItemToUnlock.id === 'xp_booster') {
+                                const now = new Date();
+                                const nextBuy = userProfile.xpBoosterNextBuyAvailable ? new Date(userProfile.xpBoosterNextBuyAvailable) : null;
+                                if (nextBuy && now < nextBuy) {
+                                  setErrorToast("Acest booster este încă în cooldown!");
+                                  setShopItemToUnlock(null);
+                                  return;
+                                }
+
+                                setUserProfile(prev => ({
+                                  ...prev,
+                                  gems: (prev.gems ?? 0) - 15,
+                                  xpBoosterActiveUntil: new Date(Date.now() + 20 * 60 * 1000).toISOString(),
+                                  xpBoosterNextBuyAvailable: new Date(Date.now() + 60 * 60 * 1000).toISOString()
+                                }));
+                                setSuccessToast("Booster de XP pornit pentru 20 de minute! Progresul tău este acum accelerat! 🚀⚡");
+                              } else {
+                                setUserProfile(prev => ({
+                                  ...prev,
+                                  gems: (prev.gems ?? 0) - shopItemToUnlock.cost,
+                                  unlockedItems: [...(prev.unlockedItems || []), shopItemToUnlock.id]
+                                }));
+                                setSuccessToast(`Super! Resursa fiscală '${shopItemToUnlock.title}' a fost deblocată! 🛍️🎉`);
+                                setOpenedPremiumResource(shopItemToUnlock.id);
+                              }
+                            } else {
+                              setErrorToast(`Fonduri de gemuri insuficiente! Ai nevoie de încă ${shopItemToUnlock.cost - userGems} gemuri.`);
                             }
                             setShopItemToUnlock(null);
                           }}
@@ -4915,6 +5141,19 @@ ${onePagePlan.cost || "Nespecificat în plan."}
                     </svg>
                     <span className="text-center font-bold">Continuă cu Google</span>
                   </button>
+
+                  <div className="pt-3 border-t border-[#1F293D]/50 mt-4">
+                    <p className="text-[10px] text-[#64748B] text-center leading-relaxed mb-3">
+                      ⚠️ Întâmpini erori la conectare pe Netlify/GitHub? Aceasta se datorează neautorizării domeniului tău în Firebase. Poți trece instant în:
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleLocalLogin}
+                      className="w-full bg-[#10B981]/15 hover:bg-[#10B981]/25 border border-[#10B981]/30 text-[#10B981] font-bold text-xs py-3 px-4 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      ⚡ Conectează în Mod Local (Salvare Browser)
+                    </button>
+                  </div>
 
                 </form>
 
@@ -5805,8 +6044,8 @@ ${onePagePlan.cost || "Nespecificat în plan."}
                 referrerPolicy="no-referrer"
                 className="aspect-square w-6 h-6 rounded-md object-cover shadow-[0_0_8px_rgba(16,185,129,0.25)]"
               />
-              <span className={`font-display font-extrabold tracking-tight ${theme === 'light' ? 'text-slate-800' : 'text-white'}`}>
-                StartUp Finance
+              <span className={`font-display font-black tracking-tight ${theme === 'light' ? 'text-slate-800' : 'text-white'}`}>
+                StartUp <span className="text-[#10B981]">Finance</span>
               </span>
             </div>
             <p className="text-xs text-[#64748B] font-semibold">
@@ -6998,6 +7237,25 @@ ${onePagePlan.cost || "Nespecificat în plan."}
             </div>
             <p className="text-xs text-white font-semibold leading-normal">
               {successToast}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ERROR TOAST ALERTS */}
+      <AnimatePresence>
+        {errorToast !== null && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="fixed bottom-6 right-6 z-50 bg-[#1E2538] border border-rose-500 p-4 rounded-xl shadow-xl flex items-center gap-3 max-w-sm"
+          >
+            <div className="w-6 h-6 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center font-bold text-sm">
+              ✕
+            </div>
+            <p className="text-xs text-white font-semibold leading-normal">
+              {errorToast}
             </p>
           </motion.div>
         )}

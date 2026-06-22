@@ -532,6 +532,14 @@ body,
   max-width: 100vw !important;
   width: 100% !important;
   box-sizing: border-box !important;
+  touch-action: pan-y !important; /* Forces normal vertical scrolls, entirely disables zoom or sideways drift gestures */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input, textarea, select {
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 /* Ensure child elements properly adhere to parents layout boxes without overflow-x */
